@@ -1,0 +1,60 @@
+---
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+
+   - name: Create a resource group
+     azure_rm_resourcegroup:
+        name: vmki
+        location: westus
+        tags:
+          testing: testing
+          delete: never
+
+   - name: Create virtual network
+     azure_rm_virtualnetwork:
+        resource_group: vmki
+        name: testvn001
+        address_prefixes: "10.10.0.0/16"
+
+   - name: Add subnet
+     azure_rm_subnet:
+        resource_group: vmki
+        name: subnet001
+        address_prefix: "10.10.0.0/24"
+        virtual_network: testvn001
+
+
+   - name: Create a public ip address
+     azure_rm_publicipaddress:
+        resource_group: vmki
+        name: my_public_ip
+        allocation_method: Static
+        domain_name_label: ####
+        # ####.westus.cloudapp.azure.com
+        
+   - name: Create NIC
+     azure_rm_networkinterface:
+         name: jaba
+         resource_group: vmki
+         virtual_network: testvn001
+         public_ip_address_name: my_public_ip
+         subnet_name: subnet001
+
+   - name: Creating VM
+     azure_rm_virtualmachine:
+        resource_group: vmki
+        name: audi
+        vm_size: Standard_D1
+        admin_username: devops
+        admin_password: #######
+        network_interface_names: jaba
+        image:
+          offer: UbuntuServer
+          publisher: Canonical
+          sku: '14.04.4-LTS'
+          version: latest
+
+          
